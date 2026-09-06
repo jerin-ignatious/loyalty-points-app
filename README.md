@@ -13,7 +13,7 @@ Auth: **email OTP (magic link)** and **Google OAuth** only. Phone OTP is intenti
 
 ## Data Model
 
-Three tables: `customers`, `staff`, `transactions`. See [`design-doc.md`](./design-doc.md) for full schema and rationale. In short:
+Three tables: `customers`, `staff`, `transactions`. See [`design-doc.md`](./docs/design-doc.md) for full schema and rationale. In short:
 
 - `customers.points_balance` is a cached total; `transactions` is the source of truth.
 - Every award/redeem/adjustment writes a `transactions` row **and** updates `customers.points_balance` in a single DB transaction — never as separate writes.
