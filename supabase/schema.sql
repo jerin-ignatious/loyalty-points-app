@@ -64,5 +64,14 @@ create policy staff_read_any_transaction on transactions
 create policy staff_read_self on staff
   for select using (auth.uid() = id);
 
+-- Customers may create their own row on first login (see app/auth/callback/route.ts),
+-- but only ever with a starting balance of 0 -- never a way to self-award points.
+create policy customer_insert_own on customers
+  for insert with check (auth.uid() = id and points_balance = 0);
+
+-- Realtime is off by default per table — needed for the balance to update
+-- live in the UI right after staff records a transaction.
+alter publication supabase_realtime add table customers;
+
 -- No insert/update policies are granted on customers or transactions for the
 -- anon/authenticated roles -- all writes happen server-side via lib/points.ts.
