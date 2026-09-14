@@ -1,0 +1,9 @@
+{
+  "name": "Loyalty Points",
+  "short_name": "Loyalty",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f1e9d8",
+  "theme_color": "#24303d",
+  "icons": []
+}

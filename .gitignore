@@ -1,1 +1,26 @@
+# ide
 .idea/
+
+# dependencies
+/node_modules
+
+# next.js build output
+/.next
+/out
+
+# production build
+/build
+
+# env files — never commit real credentials
+.env
+.env.local
+.env.*.local
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# misc
+.DS_Store
+*.pem
+npm-debug.log*
