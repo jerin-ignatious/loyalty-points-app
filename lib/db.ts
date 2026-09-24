@@ -12,6 +12,7 @@ import postgres from 'postgres';
 const sql = postgres(process.env.SUPABASE_DB_URL!, {
   ssl: 'require',
   max: 5,
+  prepare: false, // required for Supabase's transaction-mode pooler
 });
 
 export default sql;
