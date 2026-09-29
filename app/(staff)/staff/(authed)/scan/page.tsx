@@ -23,11 +23,9 @@ export default function StaffScanPage() {
 
   async function handleScan(qrToken: string) {
     setPhase({ step: 'lookup' });
-
     try {
       const res = await fetch(`/api/customers/by-token/${encodeURIComponent(qrToken)}`);
       const data = await res.json();
-
       if (!res.ok) {
         setPhase({
           step: 'error',
@@ -38,7 +36,6 @@ export default function StaffScanPage() {
         });
         return;
       }
-
       setPhase({ step: 'ready', customer: data });
     } catch {
       setPhase({ step: 'error', message: 'Network error — try again' });
@@ -51,9 +48,8 @@ export default function StaffScanPage() {
   }
 
   return (
-    <main style={{ padding: '24px', maxWidth: '420px', margin: '0 auto' }}>
-      <p style={{ margin: '0 0 4px', fontSize: '13px', color: 'var(--brass)' }}>Staff counter</p>
-      <h1 style={{ fontSize: '22px', marginBottom: '20px' }}>Scan customer</h1>
+    <div>
+      <h1 style={{ fontSize: '20px', marginBottom: '16px' }}>Scan customer</h1>
 
       {phase.step === 'scan' && (
         <>
@@ -134,6 +130,6 @@ export default function StaffScanPage() {
           </button>
         </div>
       )}
-    </main>
+    </div>
   );
 }
