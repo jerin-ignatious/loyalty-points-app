@@ -5,12 +5,20 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
   const next = searchParams.get('next') ?? '/';
+  // Preserve context on failure — a staff attempt should bounce back to
+  // staff login, not silently land on the customer login page.
+  const fallbackLogin = next.startsWith('/staff') ? '/staff/login' : '/login';
 
   if (code) {
     const supabase = await createClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (!error && data.user) {
+    if (error) {
+      console.error('exchangeCodeForSession failed:', error.message);
+      return NextResponse.redirect(`${origin}${fallbackLogin}?error=auth_failed`);
+    }
+
+    if (data.user) {
       if (!next.startsWith('/staff')) {
         const { data: existingCustomer } = await supabase
           .from('customers')
@@ -31,12 +39,8 @@ export async function GET(request: NextRequest) {
           });
 
           if (insertError) {
-            // Don't silently continue to a page that expects a customer row
-            // to exist — surface this so it's actually debuggable.
             console.error('Failed to create customer row:', insertError.message);
-            return NextResponse.redirect(
-              `${origin}/login?error=account_setup_failed`
-            );
+            return NextResponse.redirect(`${origin}${fallbackLogin}?error=account_setup_failed`);
           }
         }
       }
@@ -45,5 +49,5 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.redirect(`${origin}/login?error=auth_failed`);
+  return NextResponse.redirect(`${origin}${fallbackLogin}?error=auth_failed`);
 }
