@@ -1,9 +1,7 @@
+import Link from 'next/link';
 import { AuthCard } from '@/components/AuthCard';
 import { LoginForm } from '@/components/LoginForm';
 
-// Skip static prerendering — this page is a pure client-side form with
-// no static content, and prerendering it at build time is what triggers
-// the "URL and API key are required" error.
 export const dynamic = 'force-dynamic';
 
 export default function CustomerLoginPage() {
@@ -15,6 +13,11 @@ export default function CustomerLoginPage() {
       accent="ink"
     >
       <LoginForm next="/" accent="ink" />
+      <p style={{ textAlign: 'center', fontSize: '12px', marginTop: '16px' }}>
+        <Link href="/staff/login" style={{ color: 'var(--brass)' }}>
+          Staff member? Sign in here
+        </Link>
+      </p>
     </AuthCard>
   );
 }
