@@ -1,9 +1,15 @@
 import sql from '@/lib/db';
 
 export type TransactionType = 'earn' | 'redeem' | 'adjustment';
+export type AdjustmentDirection = 'add' | 'subtract';
 
 export class PointsError extends Error {
-  code: 'invalid_type' | 'note_required' | 'customer_not_found' | 'insufficient_balance';
+  code:
+    | 'invalid_type'
+    | 'note_required'
+    | 'direction_required'
+    | 'customer_not_found'
+    | 'insufficient_balance';
   constructor(code: PointsError['code'], message: string) {
     super(message);
     this.code = code;
@@ -14,8 +20,10 @@ interface ApplyTransactionInput {
   customerId: string;
   staffId: string;
   type: TransactionType;
-  points: number; // always a positive magnitude — this function decides the sign
+  points: number; // always a positive magnitude
   note: string | null;
+  /** Required when type is 'adjustment' — which way the correction goes. */
+  direction?: AdjustmentDirection;
 }
 
 interface ApplyTransactionResult {
@@ -23,17 +31,10 @@ interface ApplyTransactionResult {
   newBalance: number;
 }
 
-/**
- * The one place points_balance is ever changed. All validation and the
- * sign decision live here in application code (no DB functions) — the
- * only SQL is a plain transaction with a row lock, run from here.
- *
- * Never call this from more than one route. See docs/lld.md Section 5.
- */
 export async function applyTransaction(
   input: ApplyTransactionInput
 ): Promise<ApplyTransactionResult> {
-  const { customerId, staffId, type, points, note } = input;
+  const { customerId, staffId, type, points, note, direction } = input;
 
   if (!['earn', 'redeem', 'adjustment'].includes(type)) {
     throw new PointsError('invalid_type', `"${type}" is not a valid transaction type`);
@@ -44,12 +45,23 @@ export async function applyTransaction(
   if (!Number.isInteger(points) || points <= 0) {
     throw new PointsError('invalid_type', 'points must be a positive integer');
   }
+  if (type === 'adjustment' && direction !== 'add' && direction !== 'subtract') {
+    throw new PointsError(
+      'direction_required',
+      'direction ("add" or "subtract") is required for adjustment'
+    );
+  }
 
-  const signedPoints = type === 'earn' ? points : -points;
+  let signedPoints: number;
+  if (type === 'earn') {
+    signedPoints = points;
+  } else if (type === 'redeem') {
+    signedPoints = -points;
+  } else {
+    signedPoints = direction === 'add' ? points : -points;
+  }
 
   return sql.begin(async (tx) => {
-    // Row lock prevents two staff scanning the same customer at the same
-    // instant from both reading the pre-update balance.
     const [customer] = await tx<{ points_balance: number }[]>`
       select points_balance from customers where id = ${customerId} for update
     `;
@@ -60,7 +72,9 @@ export async function applyTransaction(
 
     const newBalance = customer.points_balance + signedPoints;
 
-    if (type === 'redeem' && newBalance < 0) {
+    // Balance never goes negative, regardless of type — a subtracting
+    // adjustment is held to the same floor as a redeem.
+    if (newBalance < 0) {
       throw new PointsError('insufficient_balance', 'balance cannot go below zero');
     }
 

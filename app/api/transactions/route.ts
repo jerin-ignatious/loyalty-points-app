@@ -1,6 +1,11 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { applyTransaction, PointsError, type TransactionType } from '@/lib/points';
+import {
+  applyTransaction,
+  PointsError,
+  type TransactionType,
+  type AdjustmentDirection,
+} from '@/lib/points';
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -23,14 +28,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
-  let body: { customerId?: string; type?: TransactionType; points?: number; note?: string };
+  let body: {
+    customerId?: string;
+    type?: TransactionType;
+    points?: number;
+    note?: string;
+    direction?: AdjustmentDirection;
+  };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'invalid JSON body' }, { status: 400 });
   }
 
-  const { customerId, type, points, note } = body;
+  const { customerId, type, points, note, direction } = body;
 
   if (!customerId || typeof customerId !== 'string') {
     return NextResponse.json({ error: 'customerId is required' }, { status: 400 });
@@ -41,6 +52,12 @@ export async function POST(request: NextRequest) {
   if (typeof points !== 'number' || !Number.isInteger(points) || points <= 0) {
     return NextResponse.json({ error: 'points must be a positive integer' }, { status: 400 });
   }
+  if (type === 'adjustment' && direction !== 'add' && direction !== 'subtract') {
+    return NextResponse.json(
+      { error: 'direction ("add" or "subtract") is required for adjustment' },
+      { status: 400 }
+    );
+  }
 
   try {
     const result = await applyTransaction({
@@ -49,6 +66,7 @@ export async function POST(request: NextRequest) {
       type,
       points,
       note: note ?? null,
+      direction,
     });
 
     return NextResponse.json(
@@ -60,6 +78,7 @@ export async function POST(request: NextRequest) {
       const statusByCode: Record<PointsError['code'], number> = {
         invalid_type: 400,
         note_required: 400,
+        direction_required: 400,
         customer_not_found: 404,
         insufficient_balance: 422,
       };

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 type TxType = 'earn' | 'redeem' | 'adjustment';
+type Direction = 'add' | 'subtract';
 
 interface Customer {
   id: string;
@@ -20,12 +21,14 @@ export function TransactionForm({
   onCancel: () => void;
 }) {
   const [type, setType] = useState<TxType>('earn');
+  const [direction, setDirection] = useState<Direction>('subtract');
   const [points, setPoints] = useState('');
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   const noteRequired = type !== 'earn';
+  const showDirection = type === 'adjustment';
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -51,6 +54,7 @@ export function TransactionForm({
           type,
           points: pointsNum,
           note: noteRequired ? note.trim() : undefined,
+          direction: showDirection ? direction : undefined,
         }),
       });
 
@@ -95,6 +99,31 @@ export function TransactionForm({
           </button>
         ))}
       </div>
+
+      {showDirection && (
+        <div style={{ marginBottom: '12px' }}>
+          <p style={{ fontSize: '13px', margin: '0 0 6px' }}>Direction</p>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {(['add', 'subtract'] as Direction[]).map((d) => (
+              <button
+                key={d}
+                type="button"
+                onClick={() => setDirection(d)}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  border: '1px solid var(--ink)',
+                  background: direction === d ? 'var(--ink)' : 'transparent',
+                  color: direction === d ? 'var(--paper)' : 'var(--ink)',
+                  fontSize: '13px',
+                }}
+              >
+                {d === 'add' ? '+ Add points' : '− Subtract points'}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <label htmlFor="points" style={{ display: 'block', fontSize: '13px', marginBottom: '6px' }}>
         Points
