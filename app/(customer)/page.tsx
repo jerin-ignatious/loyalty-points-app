@@ -60,10 +60,28 @@ export default async function CustomerHomePage() {
 
   return (
     <main style={{ padding: '24px', maxWidth: '420px', margin: '0 auto' }}>
-      <p style={{ margin: '0 0 4px', fontSize: '13px', color: 'var(--stamp)' }}>
-        Loyalty card
-      </p>
-      <h1 style={{ fontSize: '24px', marginBottom: '24px' }}>Hi, {customer.name}</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <p style={{ margin: '0 0 4px', fontSize: '13px', color: 'var(--stamp)' }}>
+            Loyalty card
+          </p>
+          <h1 style={{ fontSize: '24px', marginBottom: '24px' }}>Hi, {customer.name}</h1>
+        </div>
+        <form action="/auth/signout" method="post">
+          <button
+            type="submit"
+            style={{
+              fontSize: '13px',
+              border: '1px solid var(--ink)',
+              background: 'transparent',
+              color: 'var(--ink)',
+              padding: '6px 10px',
+            }}
+          >
+            Sign out
+          </button>
+        </form>
+      </div>
 
       <PointsBalance customerId={customer.id} initialBalance={customer.points_balance} />
 
