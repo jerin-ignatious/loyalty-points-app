@@ -14,22 +14,23 @@ export default async function StaffCustomersPage() {
       {!customers || customers.length === 0 ? (
         <p style={{ color: 'var(--ink-soft)', fontSize: '14px' }}>No customers yet.</p>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
-          <thead>
-            <tr style={{ borderBottom: '1px solid var(--ink)' }}>
-              <th style={{ textAlign: 'left', padding: '8px 4px' }}>Name</th>
-              <th style={{ textAlign: 'right', padding: '8px 4px' }}>Points</th>
-            </tr>
-          </thead>
-          <tbody>
-            {customers.map((c) => (
-              <tr key={c.id} style={{ borderBottom: '1px dashed var(--ink-soft)' }}>
-                <td style={{ padding: '8px 4px' }}>{c.name}</td>
-                <td style={{ padding: '8px 4px', textAlign: 'right' }}>{c.points_balance}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+          {customers.map((c) => (
+            <li
+              key={c.id}
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '12px 0',
+                borderBottom: '1px dashed var(--ink-soft)',
+              }}
+            >
+              <span style={{ fontSize: '14px' }}>{c.name}</span>
+              <span style={{ fontSize: '15px', fontWeight: 500 }}>{c.points_balance}</span>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );
